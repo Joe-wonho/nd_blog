@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.88.1">
+    <title>수정/삭제 페이지</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/navbar-static/">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+        integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
+
+    <script>
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const boardId = urlParams.get("boardId");
+
+        $(document).ready(function () {
+            get_edit();
+
+        })
+
+        function get_edit() {
+            $("#editBoard").empty()
+            $.ajax({
+                type: "GET",
+                url: `/api/board/${boardId}`,
+                data: {},
+                success: function (response) {
+                    let boardsEdit = response["detail"];
+                    console.log(boardsEdit)
+                    let htmlTemp = `
+                    <div class="container-fluid py-5">
+
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">제목</span>
+                            <input id="post-title" value="${boardsEdit["title"]}" type="text" class="form-control" aria-label="Username"
+                                aria-describedby="basic-addon1">
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">작성자명</span>
+                            <input id="post-username" type="text" class="form-control" value="${boardsEdit["username"]}"
+                                aria-label="Username">
+                            <span class="input-group-text">비밀번호</span>
+                            <input id="post-pw" type="password" class="form-control" placeholder="비밀번호" aria-label="Server">
+                        </div>
+
+                        <div class="input-group">
+                            <span class="input-group-text">내용</span>
+                            <textarea id="post-contents" class="form-control" aria-label="With textarea"
+                                rows="15">${boardsEdit["contents"]}</textarea>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <button onclick="update_board(${boardsEdit["boardId"]})" type="button"
+                                class="btn btn-outline-secondary">수정</button>
+                            <button onclick="delete_board(${boardsEdit["boardId"]})" type="button"
+                                class="btn btn-outline-secondary">삭제</button>
+                            <button onclick="location.href='/home'" type="button"
+                                class="btn btn-outline-secondary">취소</button>
+                        </div>
+
+                        </div> `
+                    $("#editBoard").append(htmlTemp)
+
+
+                }
+            });
+        }
+
+        function update_board(boardId){
+            let title = $("#post-title").val();
+            let username = $("#post-username").val();
+            let post_pw = $("#post-pw").val();
+            let contents = $("#post-contents").val();
+
+            $.ajax({
+                type: "PATCH",
+                url: `/api/board/${boardId}`,
+                data: {
+                    'title': title,
+                    'username': username,
+                    'post_pw': post_pw,
+                    'contents': contents
+                },
+                success: function (response) {
+                    if(response["action"]=="success"){
+                        alert("수정되었습니다.")
+                    window.location.href="/home"
+                    } else{
+                        alert("비밀번호가 틀렸습니다.")
+                        window.location.reload();
+                    }
+                
+                }
+            })
+        }
+
+        function delete_board(boardId) {
+            let post_pw = $("#post-pw").val();
+
+            $.ajax({
+                type: "DELETE",
+                url: `/api/board/${boardId}`,
+                data: {'post_pw': post_pw},
+                success: function (response) {
+                    if(response["action"]=="success"){
+                        alert("삭제되었습니다")
+                    window.location.href="/home"
+                    } else{
+                        alert("비밀번호가 틀렸습니다")
+                        window.location.reload();
+                    }
+                }
+            });
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <main>
+        <div class="container py-4">
+            <header class="pb-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" class="me-2" viewBox="0 0 118 94"
+                        role="img">
+                        <title>Bootstrap</title>
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M24.509 0c-6.733 0-11.715 5.893-11.492 12.284.214 6.14-.064 14.092-2.066 20.577C8.943 39.365 5.547 43.485 0 44.014v5.972c5.547.529 8.943 4.649 10.951 11.153 2.002 6.485 2.28 14.437 2.066 20.577C12.794 88.106 17.776 94 24.51 94H93.5c6.733 0 11.714-5.893 11.491-12.284-.214-6.14.064-14.092 2.066-20.577 2.009-6.504 5.396-10.624 10.943-11.153v-5.972c-5.547-.529-8.934-4.649-10.943-11.153-2.002-6.484-2.28-14.437-2.066-20.577C105.214 5.894 100.233 0 93.5 0H24.508zM80 57.863C80 66.663 73.436 72 62.543 72H44a2 2 0 01-2-2V24a2 2 0 012-2h18.437c9.083 0 15.044 4.92 15.044 12.474 0 5.302-4.01 10.049-9.119 10.88v.277C75.317 46.394 80 51.21 80 57.863zM60.521 28.34H49.948v14.934h8.905c6.884 0 10.68-2.772 10.68-7.727 0-4.643-3.264-7.207-9.012-7.207zM49.948 49.2v16.458H60.91c7.167 0 10.964-2.876 10.964-8.281 0-5.406-3.903-8.178-11.425-8.178H49.948z"
+                            fill="currentColor"></path>
+                    </svg>
+                    <span class="fs-4">글 수정 / 삭제</span>
+                </a>
+            </header>
+
+
+            <div id="editBoard" class="p-5 mb-4 bg-light rounded-3">
+                <div class="container-fluid py-5">
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1">제목</span>
+                        <input id="post-title" type="text" class="form-control" placeholder="제목" aria-label="Username"
+                            aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">작성자명</span>
+                        <input id="post-username" type="text" class="form-control" placeholder="작성자"
+                            aria-label="Username">
+                        <span class="input-group-text">비밀번호</span>
+                        <input id="post-pw" type="password" class="form-control" placeholder="비밀번호" aria-label="Server">
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-text">내용</span>
+                        <textarea id="post-contents" class="form-control" aria-label="With textarea"
+                            rows="15"></textarea>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button onclick="" type="button" class="btn btn-outline-secondary">수정</button>
+                        <button onclick="" type="button" class="btn btn-outline-secondary">삭제</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <footer class="pt-3 mt-4 text-muted border-top">
+                © 2021
+            </footer>
+        </div>
+    </main>
+
+
+</body>
+
+</html>
